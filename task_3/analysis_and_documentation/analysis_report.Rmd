@@ -48,3 +48,18 @@ seabirds_full_clean %>%
 
 ```
 
+Bird with the highest total count above latitude -30
+```{r}
+seabirds_full_clean %>%
+  filter(lat > -30) %>%
+  group_by(species_abbreviation) %>%
+  summarise(sightings_count = n(),
+            total_count = sum(count)) %>%
+  slice_max(total_count, n=1) %>%
+  left_join(seabirds_species, by = "species_abbreviation")
+```
+
+```{r}
+
+```
+
