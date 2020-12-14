@@ -59,7 +59,25 @@ seabirds_full_clean %>%
   left_join(seabirds_species, by = "species_abbreviation")
 ```
 
-```{r}
+How many different types of birds only ever seen in groups of 1
 
+```{r}
+#table of birds sighted once
+seabirds_single_sightings <- seabirds_full_clean %>%
+  filter(count == 1) %>%
+  group_by(species_abbreviation) %>%
+  summarise(sightings = n())
+
+#table of birds sighted in groups
+seabirds_group_sightings <- seabirds_full_clean %>%
+  filter(count > 1) %>%
+  group_by(species_abbreviation) %>%
+  summarise(sightings = n())
+
+#perform anti-join to find birds who were not sighted in a group
+anti_join(seabirds_single_sightings,
+          seabirds_group_sightings,
+          by = "species_abbreviation") %>%
+  nrow()
 ```
 
