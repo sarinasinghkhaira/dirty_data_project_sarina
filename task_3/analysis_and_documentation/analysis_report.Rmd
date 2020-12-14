@@ -31,11 +31,20 @@ seabirds_species <- seabirds_full_clean %>%
 ```{r}
 seabirds_full_clean %>%
   group_by(species_abbreviation) %>%
-  summarise(count = n()) %>%
-  slice_max(count, n=1) %>%
-  left_join(seabirds_full_clean, by = "species_abbreviation")
+  summarise(sightings_count = n()) %>%
+  slice_max(sightings_count, n=1) %>%
+  left_join(seabirds_species, by = "species_abbreviation")
 ```
 
+Bird with the highest total count
 
+```{r}
+seabirds_full_clean %>%
+  group_by(species_abbreviation) %>%
+  summarise(sightings_count = n(),
+            total_count = sum(count)) %>%
+  slice_max(total_count, n=1) %>%
+  left_join(seabirds_species, by = "species_abbreviation")
 
+```
 
