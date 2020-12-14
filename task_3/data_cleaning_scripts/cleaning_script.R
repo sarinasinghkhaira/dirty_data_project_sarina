@@ -56,6 +56,18 @@ seabirds_data_full <- seabirds_data_full %>%
   ) %>%
   drop_na(species_abbreviation, count)
 
+#Remove age and plumage phases from species name variables
+seabirds_data_full <- seabirds_data_full %>% 
+  mutate(
+    species_common_name = str_remove_all(
+      species_common_name, "[A-Z]$|sensu lato|[1-9]| [A-Z]+"),
+    species_scientific_name = str_remove_all(
+      species_scientific_name, "[A-Z]$|sensu lato|[1-9]| [A-Z]+"),
+    species_abbreviation = str_remove_all(
+      species_abbreviation, " .*")
+  ) 
+
+
 #Verify count and latitude variables
 seabirds_cleaned <- seabirds_data_full %>%
   verify(count >= 0 & count <= 99999) %>%
