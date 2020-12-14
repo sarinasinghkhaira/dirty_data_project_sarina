@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Seabird Sightings"
 output:
   html_document:
     df_print: paged
@@ -9,20 +9,24 @@ output:
 library(here)
 library(tidyverse)
 ```
-## Cleaning seabirds data
+## Seabirds data
+
+The seabirds data contains sightings of seabirds from 1969 - 1990. 
+Each observation includes the species common name, scientific name, abbreviated name, number of individuals per sighting, date and latitude. 
 
 ### Data was cleaned in `cleaning_script.R` to achieve the following:
 * Change variable names to short, meaningful names
 * Join bird data to ship data to retrieve locations of sightings
-* Removed NAs in count and species abbreviations so that each observation indicates a sighting
-* Removed information on age and plumage from species names variables 
-* Verified count and latitude data were in range
-* Wrote clean data to a new csv file, imported below.
+* Remove NAs in count and species abbreviations so that each observation indicates a sighting
+* Remove information on age and plumage from species names variables 
+* Verify values for count and latitude are within specified range
+* Export clean data to a new csv file within the clean_data folder, named `seabirds_cleaned.csv`
 
 ```{r message = F, warning = F}
 seabirds_full_clean <- read_csv(here("clean_data/seabirds_cleaned.csv"))
 ```
 
+<br>
 
 #### Bird with the most individual sightings
 ```{r message = F, warning = F}
@@ -43,6 +47,8 @@ seabirds_full_clean %>%
   left_join(seabirds_species, by = "species_abbreviation")
 ```
 The bird with the most sightings was the Wandering albatross, with 11,247 sightings. 
+
+<br>
 
 #### Bird with the highest total count
 
@@ -71,6 +77,7 @@ seabirds_full_clean %>%
 ```
 The bird with the highest total count in latitudes above -30 was the Wedge-tailed Shearwater. 
 
+<br>
 
 #### How many different types of birds only ever seen in groups of 1
 
@@ -94,12 +101,13 @@ anti_join(seabirds_single_sightings,
   nrow()
 ```
 
+<br>
 
 #### How many penguins were seen
 
 ```{r message = F, warning = F}
 seabirds_full_clean %>%
   filter(str_detect(species_common_name, "[Pp]enguin")) %>%
-  summarise(total_count = sum(count))
+  summarise(total_penguin_count = sum(count))
 ```
 
