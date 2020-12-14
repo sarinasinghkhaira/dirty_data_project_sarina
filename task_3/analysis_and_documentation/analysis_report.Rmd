@@ -9,16 +9,23 @@ output:
 library(here)
 library(tidyverse)
 ```
+## Cleaning seabirds data
+
+### Data was cleaned in `cleaning_script.R` to achieve the following:
+* Change variable names to short, meaningful names
+* Join bird data to ship data to retrieve locations of sightings
+* Removed NAs in count and species abbreviations so that each observation indicates a sighting
+* Removed information on age and plumage from species names variables 
+* Verified count and latitude data were in range
+* Wrote clean data to a new csv file, imported below.
 
 ```{r message = F, warning = F}
 seabirds_full_clean <- read_csv(here("clean_data/seabirds_cleaned.csv"))
 ```
 
 
-Bird with the most individual sightings
-
-
-```{r}
+#### Bird with the most individual sightings
+```{r message = F, warning = F}
 # Make a table of common, scientific and abbreviated species names
 seabirds_species <- seabirds_full_clean %>% 
   select(species_scientific_name,
@@ -28,17 +35,18 @@ seabirds_species <- seabirds_full_clean %>%
 ```
 
 
-```{r}
+```{r message = F, warning = F}
 seabirds_full_clean %>%
   group_by(species_abbreviation) %>%
   summarise(sightings_count = n()) %>%
   slice_max(sightings_count, n=1) %>%
   left_join(seabirds_species, by = "species_abbreviation")
 ```
+The bird with the most sightings was the Wandering albatross, with 11,247 sightings. 
 
-Bird with the highest total count
+#### Bird with the highest total count
 
-```{r}
+```{r message = F, warning = F}
 seabirds_full_clean %>%
   group_by(species_abbreviation) %>%
   summarise(sightings_count = n(),
@@ -47,9 +55,12 @@ seabirds_full_clean %>%
   left_join(seabirds_species, by = "species_abbreviation")
 
 ```
+The bird with the highest total count was the Short-tailed shearwater. 
 
-Bird with the highest total count above latitude -30
-```{r}
+<br>
+
+#### Bird with the highest total count above latitude -30
+```{r message = F, warning = F}
 seabirds_full_clean %>%
   filter(lat > -30) %>%
   group_by(species_abbreviation) %>%
@@ -58,10 +69,12 @@ seabirds_full_clean %>%
   slice_max(total_count, n=1) %>%
   left_join(seabirds_species, by = "species_abbreviation")
 ```
+The bird with the highest total count in latitudes above -30 was the Wedge-tailed Shearwater. 
 
-How many different types of birds only ever seen in groups of 1
 
-```{r}
+#### How many different types of birds only ever seen in groups of 1
+
+```{r message = F, warning = F}
 #table of birds sighted once
 seabirds_single_sightings <- seabirds_full_clean %>%
   filter(count == 1) %>%
@@ -79,5 +92,14 @@ anti_join(seabirds_single_sightings,
           seabirds_group_sightings,
           by = "species_abbreviation") %>%
   nrow()
+```
+
+
+#### How many penguins were seen
+
+```{r message = F, warning = F}
+seabirds_full_clean %>%
+  filter(str_detect(species_common_name, "[Pp]enguin")) %>%
+  summarise(total_count = sum(count))
 ```
 
