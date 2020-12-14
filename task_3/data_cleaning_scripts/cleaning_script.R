@@ -36,3 +36,22 @@ ship_data <- ship_data %>%
 # Join ship to bird data
 seabirds_data_full <- seabirds_data %>%
   left_join(ship_data, by = "record_id")
+
+# Count NAs in each column
+seabirds_data_full %>%
+  is.na() %>%
+  colSums()
+
+#Investigate NAs in species_abbreviation
+species_abbr_na <- seabirds_data_full %>%
+  filter(is.na(species_abbreviation)) %>%
+  distinct(species_common_name)%>%
+  pull()
+
+#Delete rows containing 'NO BIRDS RECORDED' as species_abbreviation
+seabirds_data_full <- seabirds_data_full %>%
+  mutate(
+    species_abbreviation = na_if(species_abbreviation, species_abbr_na)
+  ) %>%
+  drop_na(species_abbreviation, count)
+
