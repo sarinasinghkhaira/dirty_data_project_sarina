@@ -1,0 +1,41 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r message = F, warning = F}
+library(here)
+library(tidyverse)
+```
+
+```{r message = F, warning = F}
+seabirds_full_clean <- read_csv(here("clean_data/seabirds_cleaned.csv"))
+```
+
+
+Bird with the most individual sightings
+
+
+```{r}
+# Make a table of common, scientific and abbreviated species names
+seabirds_species <- seabirds_full_clean %>% 
+  select(species_scientific_name,
+         species_abbreviation,
+         species_common_name) %>%
+  distinct()
+```
+
+
+```{r}
+seabirds_full_clean %>%
+  group_by(species_abbreviation) %>%
+  summarise(count = n()) %>%
+  slice_max(count, n=1) %>%
+  left_join(seabirds_full_clean, by = "species_abbreviation")
+```
+
+
+
+
