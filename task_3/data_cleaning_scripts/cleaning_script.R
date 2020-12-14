@@ -1,16 +1,17 @@
 library(readxl)
 library(janitor)
 library(tidyverse)
+library(assertr)
 
 # Read in data and clean variable names
 
 ship_data <- read_excel("raw_data/seabirds.xls", 
                         sheet = "Ship data by record ID") %>% 
-             clean_names()
+  clean_names()
 
 seabirds_data <- read_excel("raw_data/seabirds.xls", 
                             sheet = "Bird data by record ID") %>% 
-                 clean_names()
+  clean_names()
 
 # Select variables needed for analysis and rename long column names
 
@@ -55,3 +56,10 @@ seabirds_data_full <- seabirds_data_full %>%
   ) %>%
   drop_na(species_abbreviation, count)
 
+#Verify count and latitude variables
+seabirds_cleaned <- seabirds_data_full %>%
+  verify(count >= 0 & count <= 99999) %>%
+  verify((lat >= -90 & lat <= 90) | is.na(lat))
+ 
+#Write to csv
+write_csv(seabirds_cleaned, "clean_data/seabirds_cleaned.csv")
