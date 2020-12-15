@@ -52,7 +52,7 @@ candy_columns <-  candy %>%
   pull()
 
 
-
+#Select relevant columns
 candy_clean <- candy %>% select(
   internal_id,
   age,
@@ -61,6 +61,13 @@ candy_clean <- candy %>% select(
   country,
   state,
   gender,
-  where(~n_distinct(.) <= 4))
+  year,
+  all_of(candy_columns))
 
-#Notes: in
+#Pivot candy columns longer
+candy_pivot <- candy_clean %>%
+  pivot_longer(
+    cols = all_of(candy_columns),
+    names_to = "candy",
+    values_to = "response"
+  )
