@@ -71,19 +71,21 @@ candy_columns <-  candy_clean %>%
   select(col_names) %>%
   pull()
 
+#Make a unique identifier to replace timestamp and internal_id
+candy_clean <- candy_clean %>% 
+  rowid_to_column(var = "participant_id")
 
 #Select relevant columns
 candy_clean <- candy_clean %>% select(
-  internal_id,
+  participant_id,
   age,
   going_out,
-  timestamp,
   country_fix,
-  state,
   gender,
   year,
   all_of(candy_columns)) %>%
   rename(country = country_fix)
+
 
 #Pivot candy columns longer, drop rows with NA as response
 candy_pivot <- candy_clean %>%
@@ -94,4 +96,7 @@ candy_pivot <- candy_clean %>%
   ) %>%
   drop_na(response)
 
+#Write to csv
+write_csv(candy_pivot, here::here("clean_data/candy_clean.csv"))
 
+          
