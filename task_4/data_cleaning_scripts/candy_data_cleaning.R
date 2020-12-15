@@ -2,25 +2,27 @@ library(tidyverse)
 library(janitor)
 library(here)
 library(readxl)
+library(lubridate)
 #Import the raw data
 
-candy_2015 <- read_excel(here("raw_data/boing-boing-candy-2015.xlsx")) %>%
+candy_2015 <- read_excel(here::here("raw_data/boing-boing-candy-2015.xlsx")) %>%
   clean_names()
 
-candy_2016 <- read_excel(here("raw_data/boing-boing-candy-2016.xlsx")) %>%
+candy_2016 <- read_excel(here::here("raw_data/boing-boing-candy-2016.xlsx")) %>%
   clean_names()
 
-candy_2017 <- read_excel(here("raw_data/boing-boing-candy-2017.xlsx")) %>%
+candy_2017 <- read_excel(here::here("raw_data/boing-boing-candy-2017.xlsx")) %>%
   clean_names()
 
 #remove q1_ prefix from 2017 data
 c17_names_removed<- str_remove_all(names(candy_2017), "q[0-9]+_")
 names(candy_2017) <- c17_names_removed
 
-#Rename columns so they match
+#Rename columns so they match, add a column for year
 candy_2015 <- candy_2015 %>%
   rename(age = how_old_are_you,
-         going_out = are_you_going_actually_going_trick_or_treating_yourself)
+         going_out = are_you_going_actually_going_trick_or_treating_yourself) %>%
+  mutate(year = year(timestamp))
 
 
 candy_2016 <- candy_2016 %>%
@@ -28,15 +30,29 @@ candy_2016 <- candy_2016 %>%
          going_out = are_you_going_actually_going_trick_or_treating_yourself,
          country = which_country_do_you_live_in,
          state = which_state_province_county_do_you_live_in,
-         gender = your_gender)
+         gender = your_gender) %>%
+  mutate(year = year(timestamp))
 
 candy_2017 <- candy_2017 %>%
-  rename(state = state_province_county_etc)
+  rename(state = state_province_county_etc) %>%
+  mutate(year = 2017)
 
 #Combine 3 tables 
 candy <- bind_rows(candy_2015, candy_2016, candy_2017)
 
-#Select columms with 4 distinct values, and other relevant cols
+#Locate candy columns as colums that contain JOY, DESPAIR, MEH or NA
+candy_columns <-  candy %>%
+  #Replace NA with MISSING so that it comes up as a string
+  mutate_if(is.character, ~replace(., is.na(.), "MISSING")) %>% 
+  mutate_all(~str_detect(. , "JOY|DESPAIR|MISSING|MEH")) %>%
+  summarise_all(~sum(., na.rm = TRUE)) %>%
+  pivot_longer(cols = everything(), names_to = 'col_names', values_to = 'values') %>%
+  filter(values == nrow(candy)) %>%
+  select(col_names) %>%
+  pull()
+
+
+
 candy_clean <- candy %>% select(
   internal_id,
   age,
@@ -45,6 +61,6 @@ candy_clean <- candy %>% select(
   country,
   state,
   gender,
-  where(~n_distinct(.) == 4))
+  where(~n_distinct(.) <= 4))
 
 #Notes: in
