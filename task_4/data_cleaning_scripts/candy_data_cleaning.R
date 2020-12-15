@@ -40,6 +40,17 @@ candy_2017 <- candy_2017 %>%
 #Combine 3 tables 
 candy <- bind_rows(candy_2015, candy_2016, candy_2017)
 
+#Clean up country data
+candy <- candy %>%
+  mutate(country = str_to_lower(country),
+         country = str_remove_all(country, "[:punct:]|the "),
+         country = case_when(
+           str_detect(country, "united stat|merica|states|u.s.a|^us$|usa") ~ "usa",
+           str_detect(country, "united kin|england|scotland") ~ "uk",
+           str_detect(country, "[0-9]") ~ "NA",
+           TRUE ~ country
+         ))
+
 #Locate candy columns as colums that contain JOY, DESPAIR, MEH or NA
 candy_columns <-  candy %>%
   #Replace NA with MISSING so that it comes up as a string
