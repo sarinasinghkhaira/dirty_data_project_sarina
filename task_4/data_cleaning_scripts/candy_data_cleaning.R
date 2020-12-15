@@ -24,7 +24,6 @@ candy_2015 <- candy_2015 %>%
          going_out = are_you_going_actually_going_trick_or_treating_yourself) %>%
   mutate(year = year(timestamp))
 
-
 candy_2016 <- candy_2016 %>%
   rename(age = how_old_are_you,
          going_out = are_you_going_actually_going_trick_or_treating_yourself,
@@ -45,16 +44,21 @@ candy_clean <- candy %>%
   mutate(country_fix = str_to_lower(country),
          country_fix = str_remove_all(country_fix, "[:punct:]|the "),
          country_fix = case_when(
-           str_detect(country_fix, "united s|m[a-z]*ri[ck]a|states|u.s.a|^us$|usa") ~ "usa",
+           str_detect(
+             country_fix, 
+             "united s|m[a-z]*ri[ck]a|states|u.s.a|^us[ ]*|usa") ~ "usa",
            str_detect(country_fix, "united kin|england|scotland") ~ "uk",
            str_detect(country_fix, "[0-9]") ~ "NA",
            TRUE ~ country_fix
          ))
-
+#Run this code to check country names 
 #candy_clean %>%
 #  select(country, country_fix) %>%
 #  group_by(country, country_fix) %>%
 #  summarise(count = n())
+
+#Run this code to check final country names
+#unique(candy_clean$country_fix)
 
 #Locate candy columns as colums that contain JOY, DESPAIR, MEH or NA
 candy_columns <-  candy_clean %>%
@@ -74,11 +78,12 @@ candy_clean <- candy_clean %>% select(
   age,
   going_out,
   timestamp,
-  country,
+  country_fix,
   state,
   gender,
   year,
-  all_of(candy_columns))
+  all_of(candy_columns)) %>%
+  rename(country = country_fix)
 
 #Pivot candy columns longer, drop rows with NA as response
 candy_pivot <- candy_clean %>%
@@ -88,4 +93,5 @@ candy_pivot <- candy_clean %>%
     values_to = "response"
   ) %>%
   drop_na(response)
+
 
