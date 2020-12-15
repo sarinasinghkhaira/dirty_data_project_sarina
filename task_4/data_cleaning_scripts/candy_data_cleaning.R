@@ -40,31 +40,36 @@ candy_2017 <- candy_2017 %>%
 #Combine 3 tables 
 candy <- bind_rows(candy_2015, candy_2016, candy_2017)
 
-#Clean up country data
-candy <- candy %>%
-  mutate(country = str_to_lower(country),
-         country = str_remove_all(country, "[:punct:]|the "),
-         country = case_when(
-           str_detect(country, "united stat|merica|states|u.s.a|^us$|usa") ~ "usa",
-           str_detect(country, "united kin|england|scotland") ~ "uk",
-           str_detect(country, "[0-9]") ~ "NA",
-           TRUE ~ country
+#Clean up country variable
+candy_clean <- candy %>%
+  mutate(country_fix = str_to_lower(country),
+         country_fix = str_remove_all(country_fix, "[:punct:]|the "),
+         country_fix = case_when(
+           str_detect(country_fix, "united s|m[a-z]*ri[ck]a|states|u.s.a|^us$|usa") ~ "usa",
+           str_detect(country_fix, "united kin|england|scotland") ~ "uk",
+           str_detect(country_fix, "[0-9]") ~ "NA",
+           TRUE ~ country_fix
          ))
 
+#candy_clean %>%
+#  select(country, country_fix) %>%
+#  group_by(country, country_fix) %>%
+#  summarise(count = n())
+
 #Locate candy columns as colums that contain JOY, DESPAIR, MEH or NA
-candy_columns <-  candy %>%
+candy_columns <-  candy_clean %>%
   #Replace NA with MISSING so that it comes up as a string
   mutate_if(is.character, ~replace(., is.na(.), "MISSING")) %>% 
   mutate_all(~str_detect(. , "JOY|DESPAIR|MISSING|MEH")) %>%
   summarise_all(~sum(., na.rm = TRUE)) %>%
   pivot_longer(cols = everything(), names_to = 'col_names', values_to = 'values') %>%
-  filter(values == nrow(candy)) %>%
+  filter(values == nrow(candy_clean)) %>%
   select(col_names) %>%
   pull()
 
 
 #Select relevant columns
-candy_clean <- candy %>% select(
+candy_clean <- candy_clean %>% select(
   internal_id,
   age,
   going_out,
@@ -75,10 +80,12 @@ candy_clean <- candy %>% select(
   year,
   all_of(candy_columns))
 
-#Pivot candy columns longer
+#Pivot candy columns longer, drop rows with NA as response
 candy_pivot <- candy_clean %>%
   pivot_longer(
     cols = all_of(candy_columns),
     names_to = "candy",
     values_to = "response"
-  )
+  ) %>%
+  drop_na(response)
+
