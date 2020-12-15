@@ -2,4 +2,93 @@
 title: "R Notebook"
 output: html_notebook
 ---
+```{r}
+library(tidyverse)
+library(here)
+```
+
+```{r}
+candy_data <- read_csv(here::here("clean_data/candy_clean.csv"), 
+                  col_types = cols(country = col_character(),
+                                   gender = col_character()
+                                   ))
+```
+
+What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
+
+```{r}
+nrow(candy_data)
+```
+
+What was the average age of people who are going out trick or treating and the average age of people 3. not going trick or treating?
+
+```{r}
+candy_data %>%
+  group_by(going_out) %>%
+  summarise(avg_age = mean(age, na.rm = TRUE))
+```
+For each of joy, despair and meh, which candy bar revived the most of these ratings?
+
+```{r}
+candy_data %>%
+  group_by(response, candy) %>%
+  summarise(num_ratings = n()) %>%
+  group_by(response) %>%
+  slice_max(num_ratings)
+
+```
+How many people rated Starburst as despair?
+
+```{r}
+candy_data %>% 
+  filter(candy == "starburst" & response == "DESPAIR") %>%
+  count()
+```
+
+For the next three questions, count despair as -1, joy as +1 and meh as 0.
+```{r}
+candy_ratings <- candy_data %>% 
+  mutate(rating_score = 
+          case_when(
+            response == "JOY" ~ 1,
+            response == "DESPAIR" ~ -1,
+            response == "MEH" ~ 0
+          ))
+```
+
+
+What was the most popular candy bar by this rating system for each gender in the dataset?
+
+```{r}
+candy_ratings %>%
+  filter(!is.na(gender)) %>%
+  group_by(candy, gender) %>%
+  summarise(rating = sum(rating_score)) %>%
+  group_by(gender)%>%
+  slice_max(rating)
+```
+
+What was the most popular candy bar in each year?
+```{r}
+candy_ratings %>% 
+  group_by(candy, year) %>%
+  summarise(rating = sum(rating_score)) %>%
+  group_by(year)%>%
+  slice_max(rating)
+```
+
+What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+```{r}
+candy_ratings %>%
+  mutate(country_group = case_when(
+    country == "usa" ~ "usa",
+    country == "uk" ~ "uk",
+    country == "canada" ~ "canada",
+    TRUE ~ "other"
+  )) %>%
+  group_by(candy,country_group) %>%
+  summarise(rating = sum(rating_score)) %>%
+  group_by(country_group) %>%
+  slice_max(rating)
+```
 
