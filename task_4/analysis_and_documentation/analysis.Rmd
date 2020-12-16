@@ -7,6 +7,22 @@ library(tidyverse)
 library(here)
 ```
 
+# Candy Data
+The halloween candy dataset are the results of an online survey of trick or treat halloween candy hauls. 
+Each participant responds to each "candy" (or other item) with a feeling of joy, despair or meh (indifference) if they were to find said item in their halloween haul. 
+Participants were also able to enter their age, gender, whether or not they were actually trick or treating and their country. 
+
+Before running analysis, `candy_data_cleaning.R` must be run in order to export the clean data as a csv. 
+Steps taken to clean the data:
+
+* merging datasets from 2015, 2016 and 2017 and ensuring that column names were consistent
+* country & age variables cleaned for consistency
+* columns containing "joy/despair/meh" were interpreted to be candy columns
+* each participant received a unique id
+* table was pivoted to convert candy columns into rows
+* column is_candy indicates if the item is indeed a candy
+
+
 ```{r}
 candy_data <- read_csv(here::here("clean_data/candy_clean.csv"), 
                   col_types = cols(country = col_character(),
@@ -14,36 +30,55 @@ candy_data <- read_csv(here::here("clean_data/candy_clean.csv"),
                                    ))
 ```
 
-What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
+### What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
 
 ```{r}
-nrow(candy_data)
+candy_data %>%
+  group_by(is_candy) %>%
+  summarise(count = n())
 ```
 
-What was the average age of people who are going out trick or treating and the average age of people 3. not going trick or treating?
+The number of rows in candy_data indicates the total number of ratings of JOY/DESPAIR/MEH. Of those, 688,693 are candy.
+
+
+### What was the average age of people who are going out trick or treating and the average age of people not going trick or treating?
 
 ```{r}
 candy_data %>%
   group_by(going_out) %>%
   summarise(avg_age = mean(age, na.rm = TRUE))
 ```
-For each of joy, despair and meh, which candy bar revived the most of these ratings?
+
+### For each of joy, despair and meh, which candy bar received the most of these ratings?
 
 ```{r}
+# For items that are candy 
+candy_data %>%
+  filter(is_candy == TRUE) %>%
+  group_by(response, candy) %>%
+  summarise(num_ratings = n()) %>%
+  group_by(response) %>%
+  slice_max(num_ratings)
+```
+
+```{r}
+# For all items surveyed
 candy_data %>%
   group_by(response, candy) %>%
   summarise(num_ratings = n()) %>%
   group_by(response) %>%
   slice_max(num_ratings)
-
 ```
-How many people rated Starburst as despair?
+
+### How many people rated Starburst as despair?
 
 ```{r}
 candy_data %>% 
   filter(candy == "starburst" & response == "DESPAIR") %>%
   count()
 ```
+
+## Candy Ratings
 
 For the next three questions, count despair as -1, joy as +1 and meh as 0.
 ```{r}
@@ -57,38 +92,73 @@ candy_ratings <- candy_data %>%
 ```
 
 
-What was the most popular candy bar by this rating system for each gender in the dataset?
+### What was the most popular candy bar by this rating system for each gender in the dataset?
+
+```{r}
+candy_ratings %>%
+  filter(is_candy == TRUE) %>%
+  filter(!is.na(gender)) %>%
+  group_by(candy, gender) %>%
+  summarise(avg_rating = mean(rating_score)) %>%
+  group_by(gender)%>%
+  slice_max(avg_rating, n = 2)
+```
+Any full sized candy bar is the most popular accross all genders. The next most popular is peanut butter cups for both males and females, twix for other and kit_kats for those who'd rather not say. 
+
+
 
 ```{r}
 candy_ratings %>%
   filter(!is.na(gender)) %>%
   group_by(candy, gender) %>%
-  summarise(rating = sum(rating_score)) %>%
+  summarise(avg_rating = mean(rating_score)) %>%
   group_by(gender)%>%
-  slice_max(rating)
+  slice_max(avg_rating, n = 2)
 ```
+If we ignore any full sized candy bars, and look at all other items rated (including non-candy), the next most popular item for the male category is still a peanut butter cup. For all other gender categories, it is cash or other forms of legal tender. 
 
-What was the most popular candy bar in each year?
+
+### What was the most popular candy bar in each year?
 ```{r}
 candy_ratings %>% 
+  filter(candy != "any_full_sized_candy_bar" & is_candy == TRUE) %>%
   group_by(candy, year) %>%
-  summarise(rating = sum(rating_score)) %>%
+  summarise(avg_rating = mean(rating_score)) %>%
   group_by(year)%>%
-  slice_max(rating)
+  slice_max(avg_rating)
 ```
+Across all years, any full sized candy bar takes top place. Next in line is peanut butter cups in 2015 and 2017. Kit Kats were the next best thing after a full sized bar in 2016. 
 
-What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+
+### What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
 ```{r}
 candy_ratings %>%
-  mutate(country_group = case_when(
-    country == "usa" ~ "usa",
-    country == "uk" ~ "uk",
-    country == "canada" ~ "canada",
-    TRUE ~ "other"
+  filter(is_candy == TRUE) %>%
+  mutate(country_group = recode(country,
+    "usa" = "usa",
+    "uk" = "uk",
+    "canada" = "canada",
+    .default =  "other"
   )) %>%
   group_by(candy,country_group) %>%
-  summarise(rating = sum(rating_score)) %>%
+  summarise(rating = mean(rating_score)) %>%
   group_by(country_group) %>%
   slice_max(rating)
 ```
+Any full sized candy bar takes top place in all countries. In the UK it shares top place with rolos. 
+
+```{r}
+candy_ratings %>%
+  mutate(country_group = recode(country,
+    "usa" = "usa",
+    "uk" = "uk",
+    "canada" = "canada",
+    .default =  "other"
+  )) %>%
+  group_by(candy,country_group) %>%
+  summarise(rating = mean(rating_score)) %>%
+  group_by(country_group) %>%
+  slice_max(rating)
+```
+If we look at all items, including non-candy items, the UK rates cash the higher than any full sized candy bar. 
 
