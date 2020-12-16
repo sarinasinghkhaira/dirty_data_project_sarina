@@ -29,6 +29,14 @@ Steps taken to clean the data:
 * table was pivoted to convert candy columns into rows
 * column is_candy indicates if the item is indeed a candy
 
+<br>
+
+Assumptions made and things to consider for the following analysis:
+* An acceptable age input is between 4 and 100, all other inputs were converted to NA
+* Columns containing JOY, DESPAIR, MEH contained the responses for items
+* Columns which had values outside of the above were dropped from the cleaned dataset
+* Country and gender data was not collected for 2015
+
 
 ```{r message = F, warning = F}
 #due to the number of NAs in country and gender, need to specify col type
@@ -92,6 +100,7 @@ candy_data %>%
 ## Candy Ratings
 
 For the next three questions, count despair as -1, joy as +1 and meh as 0.
+
 ```{r message = F, warning = F}
 candy_ratings <- candy_data %>% 
   mutate(rating_score = 
@@ -115,7 +124,6 @@ candy_ratings %>%
   slice_max(avg_rating, n = 2)
 ```
 Any full sized candy bar is the most popular accross all genders. The next most popular is peanut butter cups for both males and females, twix for other and kit_kats for those who'd rather not say. 
-
 
 
 ```{r message = F, warning = F}
