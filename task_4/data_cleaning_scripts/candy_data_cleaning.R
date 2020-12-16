@@ -75,17 +75,34 @@ candy_columns <-  candy_clean %>%
 candy_clean <- candy_clean %>% 
   rowid_to_column(var = "participant_id")
 
+#Convert going_out to logical
+candy_clean <- candy_clean %>% mutate(
+  going_out = case_when(
+    going_out == "No" ~ FALSE,
+    going_out == "Yes" ~ TRUE,
+    TRUE ~ NA
+  )
+)
+
+#Remove noise from age column
+candy_clean <- candy_clean %>%
+  mutate(age = str_remove_all(age, "[``+``>``<``':,]")) %>%
+  mutate(age_fix = case_when(
+      as.numeric(age) <= 100 & as.numeric(age) >=4  ~ as.numeric(age),
+      TRUE ~ as.numeric(NA)
+    ))
+    
 #Select relevant columns
 candy_clean <- candy_clean %>% select(
   participant_id,
-  age,
+  age_fix,
   going_out,
   country_fix,
   gender,
   year,
   all_of(candy_columns)) %>%
-  rename(country = country_fix)
-
+  rename(country = country_fix,
+         age = age_fix)
 
 #Pivot candy columns longer, drop rows with NA as response
 candy_pivot <- candy_clean %>%
@@ -95,6 +112,8 @@ candy_pivot <- candy_clean %>%
     values_to = "response"
   ) %>%
   drop_na(response)
+
+
 
 #Write to csv
 write_csv(candy_pivot, here::here("clean_data/candy_clean.csv"))
