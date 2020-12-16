@@ -78,3 +78,6 @@ vignettes/*.pdf
 *.txt
 *.xls
 *.xlsx
+
+#### Data dictionary script
+data_dictionary_birds.R
