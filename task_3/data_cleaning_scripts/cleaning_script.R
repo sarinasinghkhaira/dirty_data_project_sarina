@@ -52,8 +52,7 @@ species_abbr_na <- seabirds_data_full %>%
 #Delete rows containing 'NO BIRDS RECORDED' as species_abbreviation
 seabirds_data_full <- seabirds_data_full %>%
   mutate(
-    species_abbreviation = na_if(species_abbreviation, species_abbr_na)
-  ) %>%
+    species_abbreviation = na_if(species_abbreviation, species_abbr_na)) %>%
   drop_na(species_abbreviation, count)
 
 #Remove age and plumage phases from species name variables
