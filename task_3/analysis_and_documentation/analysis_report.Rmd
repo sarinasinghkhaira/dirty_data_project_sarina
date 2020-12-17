@@ -85,7 +85,7 @@ The bird with the highest total count in latitudes above -30 was the Wedge-taile
 #table of birds sighted once
 seabirds_single_sightings <- seabirds_full_clean %>%
   filter(count == 1) %>%
-  group_by(species_abbreviation) %>%
+  group_by(species_abbreviation, genus) %>%
   summarise(sightings = n())
 
 #table of birds sighted in groups
@@ -99,7 +99,21 @@ anti_join(seabirds_single_sightings,
           seabirds_group_sightings,
           by = "species_abbreviation") %>%
   nrow()
+
 ```
+
+There are 23 species of birds that are only ever seen individually and not in groups.
+
+
+```{r message = F, warning = F}
+#perform anti-join to find birds who were not sighted in a group
+anti_join(seabirds_single_sightings,
+          seabirds_group_sightings,
+          by = "genus") %>%
+  nrow()
+```
+
+There are 6 genera of bird whose species were only ever seen individually
 
 <br>
 
@@ -108,6 +122,9 @@ anti_join(seabirds_single_sightings,
 ```{r message = F, warning = F}
 seabirds_full_clean %>%
   filter(str_detect(species_common_name, "[Pp]enguin")) %>%
-  summarise(total_penguin_count = sum(count))
+  summarise(total_penguin_count = sum(count),
+            total_genus_count = length(unique(genus)),
+            total_penguin_species_count = length(unique(species_common_name)))
 ```
 
+A total of 158 penguins were sighted consisting of 6 different genera and 7 species.
