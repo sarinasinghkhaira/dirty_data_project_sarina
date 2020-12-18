@@ -123,6 +123,9 @@ candy_ratings %>%
   group_by(gender)%>%
   slice_max(avg_rating, n = 2)
 ```
+
+
+
 Any full sized candy bar is the most popular accross all genders. The next most popular is peanut butter cups for both males and females, twix for other and kit_kats for those who'd rather not say. 
 
 
