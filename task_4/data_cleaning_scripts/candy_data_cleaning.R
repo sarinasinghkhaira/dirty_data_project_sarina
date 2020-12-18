@@ -51,22 +51,25 @@ candy_clean <- candy %>%
            str_detect(country_fix, "[0-9]") ~ "NA",
            TRUE ~ country_fix
          ))
+
 #Run this code to check country names 
 #candy_clean %>%
 #  select(country, country_fix) %>%
 #  group_by(country, country_fix) %>%
-#  summarise(count = n())
+# summarise(count = n()) %>% view()
 
 #Run this code to check final country names
 #unique(candy_clean$country_fix)
 
-#Locate candy columns as colums that contain JOY, DESPAIR, MEH or NA
+#Locate candy columns as columns that contain JOY, DESPAIR, MEH or NA
 candy_columns <-  candy_clean %>%
   #Replace NA with MISSING so that it comes up as a string
   mutate_if(is.character, ~replace(., is.na(.), "MISSING")) %>% 
   mutate_all(~str_detect(. , "JOY|DESPAIR|MISSING|MEH")) %>%
   summarise_all(~sum(., na.rm = TRUE)) %>%
-  pivot_longer(cols = everything(), names_to = 'col_names', values_to = 'values') %>%
+  pivot_longer(cols = everything(), 
+               names_to = 'col_names', 
+               values_to = 'values') %>%
   filter(values == nrow(candy_clean)) %>%
   select(col_names) %>%
   pull()
@@ -91,6 +94,7 @@ candy_clean <- candy_clean %>%
       as.numeric(age) <= 100 & as.numeric(age) >=4  ~ as.numeric(age),
       TRUE ~ as.numeric(NA)
     ))
+
     
 #Select relevant columns
 candy_clean <- candy_clean %>% select(
@@ -114,6 +118,15 @@ candy_pivot <- candy_clean %>%
   drop_na(response)
 
 
+#Cleaning candy names 
+candy_pivot <- candy_pivot %>% 
+  mutate(is_candy = case_when(
+    str_detect(candy, "cash|dental|acetaminophen|glow_stick|creepy_|healthy_fr_|
+               hugs_|bottle_caps|lapel_pins|vicodin|white_bread|
+               bonkers_the_board|chardonnay|person_of_interest|
+               real_house_wives|sandwich_sized") ~ FALSE,
+    TRUE ~ TRUE
+  ))
 
 #Write to csv
 write_csv(candy_pivot, here::here("clean_data/candy_clean.csv"))
