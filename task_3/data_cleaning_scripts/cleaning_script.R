@@ -66,6 +66,9 @@ seabirds_data_full <- seabirds_data_full %>%
       species_abbreviation, " .*")
   ) 
 
+#Add a genus column
+seabirds_data_full <- seabirds_data_full %>% 
+  mutate(genus = str_extract(species_scientific_name, "[A-Z][a-z]*"))
 
 #Verify count and latitude variables
 seabirds_cleaned <- seabirds_data_full %>%
